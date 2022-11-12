@@ -41,12 +41,15 @@ if __name__ == '__main__':
 
     x_training,y_training = generateSetRandom(30)
 
-    m = RegressionCoeffiecnts(15)
+    m = RegressionCoeffiecnts(16)
     x = np.linspace(-5, 5, 1000)
     y_fit = polyEqn(x, m)
     y_real = f(x)
     plt.plot(x,y_real)
     plt.plot(x,y_fit)
+
+    error = np.linalg.norm(y_fit-y_real)
+    print(error)
     plt.scatter(x_training,y_training)
     plt.ylim(-2, 2)
     plt.xlim(-5, 5)
