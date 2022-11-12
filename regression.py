@@ -13,6 +13,7 @@ def generateTraining(N):
     x = np.random.uniform(low=-5, high=5, size=(N,))
     y = f(x)
     return x,y
+
 if __name__ == '__main__':
     x,y = generateTraining(30)
     scatterPlot(x,y)
