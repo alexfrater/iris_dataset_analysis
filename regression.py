@@ -1,38 +1,10 @@
-
 import numpy as np
 import matplotlib.pyplot as plt
 import numpy.linalg as la
 
 
-class plotter:
-    fig = None
-    ax = None
-    def __init__(self):
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(1, 1, 1)
-        self.ax.spines['left'].set_position('center')
-        self.ax.spines['bottom'].set_position('zero')
-        self.ax.spines['right'].set_color('none')
-        self.ax.spines['top'].set_color('none')
-        self.ax.xaxis.set_ticks_position('bottom')
-        self.ax.yaxis.set_ticks_position('left')
-        self.ax.set_xlim(xmin=-5, xmax=5)
-        self.ax.set_ylim(ymin=-1.5, ymax=1.5)
-
-    def plotXY(self,x, y, color):
-        # plot the function
-        self.ax.plot(x, y, color)
-
-    def scatterPlot(self,x,y):
-        self.ax.scatter(x, y)
-
-
-# body of the constructor
 def f(x):
     return np.exp(-1/2*np.square(x-2))*np.sin(((3*np.pi)/2)*x)-np.exp(-1/2*np.square(x+2))*np.cos(np.pi*x)
-
-
-
 
 
 def generateSetRandom(N):
@@ -67,7 +39,6 @@ def RegressionCoeffiecnts(p):
 
 if __name__ == '__main__':
 
-    myplot = plotter()
     x_training,y_training = generateSetRandom(30)
 
     m = RegressionCoeffiecnts(15)
