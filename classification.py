@@ -5,6 +5,7 @@ from sklearn.linear_model import LogisticRegression
 import numpy as np
 
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.model_selection import train_test_split
 
 def SKLDA(X,y):
     lda = LinearDiscriminantAnalysis(n_components=2)
@@ -85,16 +86,75 @@ def LDA(X,y):
 def sigmoid(x):
     return 1/(1+np.exp(-x))
 
-def softmax(Y,k):
+def softmax(Z):
+    test = Z
     denom = 0
-    for i in range(len(Y)):
-        denom = denom + np.exp(Y[i])
-    return Y[k]/denom
 
-def trainLogistic(X,y,alpha,iterations)
-    N = len(X)
-    w_new = W - (alpha/N)*X.T*(h-y)
+    for i in range(len(Z)):
+        denom = denom + np.exp(Z[i])
 
+    for j in range(len(Z)):
+        test = Z[j]
+        for p in range(len(Z[j])):
+            test1 = denom[p]
+            if denom[p] != 0:
+                Z[j][p] = Z[j][p]/denom[p]
+
+    return Z
+
+def encodeClasses(y):
+    zero = [0,0,0,1]
+    one = [0,0,1,0]
+    two = [0,1,0,0]
+    three = [1, 0, 0, 0]
+    y_encoded = []
+    for i in range(len(y)):
+        if y[i] == 0:
+            y_encoded.append([0,0,0,1])
+        elif y[i] == 1:
+            y_encoded.append([0,0,1,0])
+        elif y[i] == 2:
+            y_encoded.append([0,1,0,0])
+        elif y[i] == 3:
+            y_encoded.append([1, 0, 0, 0])
+
+    return np.stack(y_encoded, axis=0 )
+
+def trainLogistic(X,y,alpha,iterations):
+    #Weigths equal number of features
+    #Features are x with column for 1s
+    y_encoded = encodeClasses(y)
+    n_training= len(X)
+    features = np.c_[np.ones(len(X)), X]
+    weights = np.zeros((features.shape[1],y_encoded.shape[1]))
+
+    for i in range(iterations):
+        hypthesis = softmax(-np.dot(features,weights))
+        tes1 = X
+        test = np.dot(features.T,(y_encoded-hypthesis))
+        weights = weights - (alpha/n_training)*np.dot(features.T,(y_encoded-hypthesis))
+
+    return weights
+
+def testLogisticModel(X,y,weights):
+    y_encoded = encodeClasses(y)
+    features=np.c_[np.ones(len(X)),X]
+    linear = np.dot(features,weights)
+    probability = softmax(linear)
+    prediction = []
+    for set in probability:
+
+        prediction.append((np.argmax(set)))
+        prediction_encoded = encodeClasses(prediction)
+        np.stack(prediction, axis=0)
+    results = (y_encoded- prediction_encoded)
+    correct  = 0
+    for result in results:
+        test = result
+        if np.all(result==0):
+            correct = correct +1
+    accuracy = (correct/len(y_test))*100
+    return accuracy
 
 if __name__ == '__main__':
     iris = load_iris()
@@ -125,14 +185,14 @@ if __name__ == '__main__':
     plt.title("LDA")
     plt.show()
 
+    X_train, X_test, y_train, y_test = train_test_split(X,y)
 
+    weights = trainLogistic(X_train,y_train,0.01,1000)
 
-    model = LogisticRegression(solver='liblinear', random_state=0)
+    print(testLogisticModel(X_test,y_test,weights))
 
-    model.fit(X, y)
-
-    print(model.classes_)
-    print(model.score(X, y))
+    # print(model.classes_)
+    # print(model.score(X, y))
 
 
 
