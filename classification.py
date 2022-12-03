@@ -15,26 +15,22 @@ def SKLDA(X,y):
     lw = 2
 
 def withinClassScatter(matrixClass):
-    mean = matrixClass.mean(1).T
-    S_k = [0,0,0,0]
-    for i in range(len(matrixClass)):
-        test = matrixClass[:,i]-mean
-        test2 = (matrixClass[:,i] - mean).T
+    classmean = np.mean(matrixClass.T, axis = 0)
 
+    S_k2 = np.dot((matrixClass.T - classmean).T,(matrixClass.T-classmean))
+    return S_k2
 
-        S_k = S_k +np.outer((matrixClass[:,i]-mean),((matrixClass[:,i] - mean).T))
-        print(S_k)
-    return S_k
+def betweenClassCovariance(classA,classB,classC):
+    mean_A = classA.mean(1)
+    mean_B = classB.mean(1)
+    mean_C = classC.mean(1)
 
-def betweenClassCovariance(class_means):
-    class_means = np.array(class_means).T
-    globalmean = class_means.mean(0)
-    S_b = [0,0,0,0]
-    num_features = len(class_means)
-    for i in range(num_features):
-        test = (class_means[i]-globalmean),
-        S_b = S_b + num_features*np.outer((class_means[i]-globalmean),((class_means[i]-globalmean)).T)
-    return S_b
+    class_means = np.array([mean_A, mean_B, mean_C])
+
+    globalmean = np.mean(class_means, axis = 0)
+
+    S_b2 = 50 * np.dot((class_means - globalmean).T,(class_means-globalmean))
+    return S_b2
 
 
 def LDA(X,y):
@@ -60,22 +56,15 @@ def LDA(X,y):
     classC = classC.reshape(4, 50)
 
     S_kA = withinClassScatter(classA)
-
     S_kB = withinClassScatter(classB)
-
     S_kC = withinClassScatter(classC)
 
     S_w = S_kA+S_kB+S_kC
-    list = (S_kA,S_kB,S_kC)
 
-    mean_A = classA.mean(1)
-    mean_B = classB.mean(1)
-    mean_C = classC.mean(1)
-    class_means = (mean_A, mean_B, mean_C)
-    # mean_global = np.average(mean_A,mean_B,)
-    S_b = betweenClassCovariance(class_means)
+    #FIX
+    S_b = betweenClassCovariance(classA,classB,classC)
     temp1 = np.linalg.inv(S_w)
-    temp = (np.linalg.eig(np.dot(np.linalg.inv(S_w),S_b))[0])
+    temp = (np.linalg.eig(np.dot(np.linalg.inv(S_w),S_b)))
     eigvs = np.linalg.eig(np.dot(np.linalg.inv(S_w),S_b))[1]
     #sorted in function?
     vectors = eigvs[0:2].T
@@ -86,38 +75,42 @@ def sigmoid(x):
     return 1/(1+np.exp(-x))
 
 def softmax(Z):
-    test = Z
     denom = 0
-
+    output_array = []
     for i in range(len(Z)):
-        denom = denom + np.exp(Z[i])
 
-    for j in range(len(Z)):
-        test = Z[j]
-        for p in range(len(Z[j])):
-            test1 = denom[p]
-            if denom[p] != 0:
-                Z[j][p] = Z[j][p]/denom[p]
+        test = Z[i]
+        for value in Z[i]:
+            denom = denom + np.exp(value)
+        newArray = []
+        for value in Z[i]:
+            newArray.append(np.exp(value)/denom)
+        output_array.append(newArray)
+        denom = 0
 
-    return Z
+    return output_array
 
 def encodeClasses(y):
-    zero = [0,0,0,1]
-    one = [0,0,1,0]
-    two = [0,1,0,0]
-    three = [1, 0, 0, 0]
+
     y_encoded = []
     for i in range(len(y)):
         if y[i] == 0:
-            y_encoded.append([0,0,0,1])
+            y_encoded.append([1,0,0,0])
         elif y[i] == 1:
-            y_encoded.append([0,0,1,0])
-        elif y[i] == 2:
             y_encoded.append([0,1,0,0])
+        elif y[i] == 2:
+            y_encoded.append([0,0,1,0])
         elif y[i] == 3:
-            y_encoded.append([1, 0, 0, 0])
+            y_encoded.append([0,0,0,1])
 
     return np.stack(y_encoded, axis=0 )
+
+
+def returnargmax(val):
+    out =[]
+    for v in val:
+        out.append(np.argmax(v))
+    return np.array(out)
 
 def trainLogistic(X,y,alpha,iterations):
     #Weigths equal number of features
@@ -128,7 +121,13 @@ def trainLogistic(X,y,alpha,iterations):
     weights = np.zeros((features.shape[1],y_encoded.shape[1]))
 
     for i in range(iterations):
-        hypthesis = softmax(-np.dot(features,weights))
+        linear = -np.dot(features,weights)
+        hypthesis = softmax(linear)
+
+        predicted = returnargmax(hypthesis)
+        y_actual = y
+        out = predicted - y_actual
+
 
         weights = weights - (alpha/n_training)*np.dot(features.T,(y_encoded-hypthesis))
 
@@ -137,33 +136,41 @@ def trainLogistic(X,y,alpha,iterations):
 def testLogisticModel(X,y,weights):
     y_encoded = encodeClasses(y)
     features=np.c_[np.ones(len(X)),X]
-    linear = np.dot(features,weights)
+    linear = -np.dot(features,weights)
     probability = softmax(linear)
     prediction = []
     for set in probability:
+        prediction.append(np.argmax(set))
+        # test = np.argmax(set)
+        # out = y-test
+        # prediction.append((np.argmax(set)))
+        # prediction_encoded = encodeClasses(prediction)
+        # np.stack(prediction, axis=0)
+    test1 = np.array(prediction)
+    test2 = y
+    out = prediction - y
 
-        prediction.append((np.argmax(set)))
-        prediction_encoded = encodeClasses(prediction)
-        np.stack(prediction, axis=0)
-    results = (y_encoded- prediction_encoded)
-    correct  = 0
-    for result in results:
-        test = result
-        if np.all(result==0):
-            correct = correct +1
+    # results = (y_encoded- prediction_encoded)
+    # correct  = 0
+    #
+    #
+    # for result in results:
+    #     test = result
+    #     if np.all(result==0):
+    #         correct = correct +1
     accuracy = (correct/len(y_test))*100
     return accuracy
 
 
-def plotData(data,name,target_names,colors):
-    f2 = plt.figure(2)
+def plotData(data,name,target_names,colors,pltnumber):
+    plt.figure(pltnumber)
     for color, i, target_names in zip(colors, [0, 1, 2], target_names):
         plt.scatter(
             data[y == i, 0], data[y == i, 1], alpha=0.8, color=color, label=target_names
         )
     plt.legend(loc="best", shadow=False, scatterpoints=1)
     plt.title(name)
-    plt.show()
+
 
 if __name__ == '__main__':
     iris = load_iris()
@@ -175,17 +182,17 @@ if __name__ == '__main__':
     X_r2 = SKLDA(X, y)
     X_lda = LDA(X,y)
 
-    plotData(X,"Data", target_names,colors)
-    plotData(X_r2, "LDASK", target_names, colors)
-    plotData(X_lda, "LDA", target_names, colors)
+    # plotData(X,"Data", target_names,colors,1)
+    # plotData(X_r2, "LDASK", target_names, colors,2)
+    # plotData(X_lda, "LDA", target_names, colors,3)
+    # plt.show()
 
 
+    X_train, X_test, y_train, y_test = train_test_split(X_r2,y)
 
-    X_train, X_test, y_train, y_test = train_test_split(X,y)
+    weights = trainLogistic(X_train,y_train,0.01,1000)
 
-    weights = trainLogistic(X_train,y_train,0.001,1000)
-
-    print(testLogisticModel(X_test,y_test,weights))
+    print(str(testLogisticModel(X_test,y_test,weights)), "%")
 
     # print(model.classes_)
     # print(model.score(X, y))
