@@ -37,23 +37,10 @@ def LDA(X,y):
     # y = y.t
     # data = np.hstack([X, y])
     data = np.c_[X,y]
+    classA = data[0:50, 0:5]
+    classB = data[50:100, 0:5]
+    classC = data[100:150, 0:5]
 
-    classA = []
-    classB = []
-    classC = []
-    for i in range(150):
-        sample = data[i]
-        if sample[4] == 0:
-            classA = np.r_[classA,sample[:-1]]
-        if sample[4] == 1:
-            classB = np.r_[classB,sample[:-1]]
-        if sample[4] == 2:
-             classC = np.r_[classC,sample[:-1]]
-
-    #Tidy up to get rid of this
-    classA = classA.reshape(4,50)
-    classB = classB.reshape(4, 50)
-    classC = classC.reshape(4, 50)
 
     S_kA = withinClassScatter(classA)
     S_kB = withinClassScatter(classB)
@@ -149,16 +136,12 @@ def testLogisticModel(X,y,weights):
     test1 = np.array(prediction)
     test2 = y
     out = prediction - y
+    discrepancy = 0
+    for value in out:
+        if value != 0:
+            discrepancy = discrepancy + 1
 
-    # results = (y_encoded- prediction_encoded)
-    # correct  = 0
-    #
-    #
-    # for result in results:
-    #     test = result
-    #     if np.all(result==0):
-    #         correct = correct +1
-    accuracy = (correct/len(y_test))*100
+    accuracy = ((len(y_test) - discrepancy)/len(y_test))*100
     return accuracy
 
 
@@ -188,11 +171,11 @@ if __name__ == '__main__':
     # plt.show()
 
 
-    X_train, X_test, y_train, y_test = train_test_split(X_r2,y)
-
-    weights = trainLogistic(X_train,y_train,0.01,1000)
-
-    print(str(testLogisticModel(X_test,y_test,weights)), "%")
+    # X_train, X_test, y_train, y_test = train_test_split(X_r2,y)
+    #
+    # weights = trainLogistic(X_train,y_train,0.01,10000)
+    #
+    # print(str(testLogisticModel(X_test,y_test,weights)), "%")
 
     # print(model.classes_)
     # print(model.score(X, y))
