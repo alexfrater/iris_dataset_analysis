@@ -12,8 +12,6 @@ def SKLDA(X,y):
     X_r2 = lda.fit(X, y).transform(X)
 
     return X_r2
-
-
     lw = 2
 
 def withinClassScatter(matrixClass):
@@ -29,12 +27,13 @@ def withinClassScatter(matrixClass):
     return S_k
 
 def betweenClassCovariance(class_means):
-    class_means = np.array(class_means)
+    class_means = np.array(class_means).T
     globalmean = class_means.mean(0)
     S_b = [0,0,0,0]
-    for i in range(len(class_means)):
+    num_features = len(class_means)
+    for i in range(num_features):
         test = (class_means[i]-globalmean),
-        S_b = S_b + np.outer((class_means[i]-globalmean),((class_means[i]-globalmean)).T)
+        S_b = S_b + num_features*np.outer((class_means[i]-globalmean),((class_means[i]-globalmean)).T)
     return S_b
 
 
@@ -130,8 +129,7 @@ def trainLogistic(X,y,alpha,iterations):
 
     for i in range(iterations):
         hypthesis = softmax(-np.dot(features,weights))
-        tes1 = X
-        test = np.dot(features.T,(y_encoded-hypthesis))
+
         weights = weights - (alpha/n_training)*np.dot(features.T,(y_encoded-hypthesis))
 
     return weights
@@ -156,38 +154,36 @@ def testLogisticModel(X,y,weights):
     accuracy = (correct/len(y_test))*100
     return accuracy
 
+
+def plotData(data,name,target_names,colors):
+    f2 = plt.figure(2)
+    for color, i, target_names in zip(colors, [0, 1, 2], target_names):
+        plt.scatter(
+            data[y == i, 0], data[y == i, 1], alpha=0.8, color=color, label=target_names
+        )
+    plt.legend(loc="best", shadow=False, scatterpoints=1)
+    plt.title(name)
+    plt.show()
+
 if __name__ == '__main__':
     iris = load_iris()
     X = iris.data
     y = iris.target
     target_names = iris.target_names
 
-    colors = ["blue", "green", "red"]
-    f1 = plt.figure(1)
-    for color, i, target_names in zip(colors, [0, 1, 2], target_names):
-        plt.scatter(
-            X[y == i, 0], X[y == i, 1], alpha=0.8, color=color, label=target_names
-        )
-    plt.legend(loc="best", shadow=False, scatterpoints=1)
-    plt.title("Original Data")
-
+    colors = ["blue", "green", "purple"]
     X_r2 = SKLDA(X, y)
     X_lda = LDA(X,y)
 
+    plotData(X,"Data", target_names,colors)
+    plotData(X_r2, "LDASK", target_names, colors)
+    plotData(X_lda, "LDA", target_names, colors)
 
 
-    f2 = plt.figure(2)
-    for color, i, target_names in zip(colors, [0, 1, 2], target_names):
-        plt.scatter(
-            X_lda[y == i, 0], X_r2[y == i, 1], alpha=0.8, color=color, label=target_names
-        )
-    plt.legend(loc="best", shadow=False, scatterpoints=1)
-    plt.title("LDA")
-    plt.show()
 
     X_train, X_test, y_train, y_test = train_test_split(X,y)
 
-    weights = trainLogistic(X_train,y_train,0.01,1000)
+    weights = trainLogistic(X_train,y_train,0.001,1000)
 
     print(testLogisticModel(X_test,y_test,weights))
 
