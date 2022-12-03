@@ -1,11 +1,9 @@
 from sklearn.datasets import load_iris
 import matplotlib.pyplot as plt
-import mpl_toolkits.mplot3d
-from sklearn.linear_model import LogisticRegression
 import numpy as np
 
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.model_selection import train_test_split
+
 
 def SKLDA(X,y):
     lda = LinearDiscriminantAnalysis(n_components=2)
@@ -14,16 +12,13 @@ def SKLDA(X,y):
     return X_r2
     lw = 2
 
-def withinClassScatter(matrixClass):
-    classmean = np.mean(matrixClass.T, axis = 0)
 
-    S_k2 = np.dot((matrixClass.T - classmean).T,(matrixClass.T-classmean))
-    return S_k2
 
 def betweenClassCovariance(classA,classB,classC):
     mean_A = classA.mean(1)
     mean_B = classB.mean(1)
     mean_C = classC.mean(1)
+
 
     class_means = np.array([mean_A, mean_B, mean_C])
 
@@ -33,27 +28,28 @@ def betweenClassCovariance(classA,classB,classC):
     return S_b2
 
 
+
+
 def LDA(X,y):
-    # y = y.t
-    # data = np.hstack([X, y])
-    data = np.c_[X,y]
-    classA = data[0:50, 0:5]
-    classB = data[50:100, 0:5]
-    classC = data[100:150, 0:5]
+
+    n_features = X.shape[1]
+    labels = np.unique(y)
+
+    globalmean = np.mean(X,axis=0).T
+    S_w = np.zeros((n_features,n_features))
+    S_b = np.zeros((n_features,n_features))
+    for label in labels:
+        classI = X[y==label]
+        n_samples = classI.shape[0]
+        classMean = classI.mean(0)
+        S_w = S_w + np.dot((classI.T - classMean),(classI.T-classMean).T)
+        test1 = S_b
+        test = np.dot((classMean- globalmean),(classMean-globalmean).T)
+        S_b = S_b + n_samples * np.dot((classMean- globalmean),(classMean-globalmean).T)
 
 
-    S_kA = withinClassScatter(classA)
-    S_kB = withinClassScatter(classB)
-    S_kC = withinClassScatter(classC)
-
-    S_w = S_kA+S_kB+S_kC
-
-    #FIX
-    S_b = betweenClassCovariance(classA,classB,classC)
-    temp1 = np.linalg.inv(S_w)
-    temp = (np.linalg.eig(np.dot(np.linalg.inv(S_w),S_b)))
     eigvs = np.linalg.eig(np.dot(np.linalg.inv(S_w),S_b))[1]
-    #sorted in function?
+
     vectors = eigvs[0:2].T
 
     return np.dot(X,vectors)
