@@ -41,11 +41,11 @@ def LDA(X,y):
     for label in labels:
         classI = X[y==label]
         n_samples = classI.shape[0]
-        classMean = classI.mean(0)
-        S_w = S_w + np.dot((classI.T - classMean),(classI.T-classMean).T)
-        test1 = S_b
-        test = np.dot((classMean- globalmean),(classMean-globalmean).T)
-        S_b = S_b + n_samples * np.dot((classMean- globalmean),(classMean-globalmean).T)
+        classMean = classI.mean(0).T
+        S_w = S_w + np.dot((classI - classMean).T,(classI-classMean))
+        # test1 = S_b
+        # test = np.dot((classMean- globalmean),(classMean-globalmean).T)
+        # S_b = S_b + n_samples * np.dot((classMean- globalmean),(classMean-globalmean).T)
 
 
     eigvs = np.linalg.eig(np.dot(np.linalg.inv(S_w),S_b))[1]
